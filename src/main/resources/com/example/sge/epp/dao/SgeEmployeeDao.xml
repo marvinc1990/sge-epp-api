@@ -1,0 +1,72 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sge.epp.dao.SgeEmployeeDao">
+
+    <resultMap type="SgeEmployee" id="result">
+        <association property="sgeEnterprise" column="id_enterprise" select="com.example.sge.epp.dao.SgeEnterpriseDao.get"/>
+        <association property="sgeTypeIdentity" column="id_type_identity" select="com.example.sge.epp.dao.SgeTypeIdentityDao.get" />
+    </resultMap>
+    
+    <insert id="insert" parameterType="SgeEmployee">
+        INSERT INTO sge_employee (
+            id_enterprise, code, names, last_names, 
+            id_type_identity, document_number, occupation,
+            area, email, phone, signature_url, 
+            fingerprint, state
+        ) VALUES (
+            #{sgeEnterprise.idEnterprise}, #{code}, #{names}, #{lastNames}, 
+            #{sgeTypeIdentity.idTypeIdentity}, #{documentNumber}, #{occupation}, 
+            #{area}, #{email}, #{phone}, #{signatureURL}, 
+            #{fingerprint}, #{state}
+        );
+    </insert>
+    
+    <update id="update" parameterType="SgeEmployee">
+        UPDATE sge_employee SET 
+            names = #{names}, last_names = #{lastNames}, 
+            id_type_identity = #{sgeTypeIdentity.idTypeIdentity},
+            document_number = #{documentNumber}, occupation = #{occupation},
+            area = #{area}, email = #{email}, phone = #{phone}, signature_url = #{signatureURL}, 
+            fingerprint = #{fingerprint}, state = #{state}
+        WHERE id_employee = #{idEmployee};
+    </update>
+    
+    <delete id="delete" parameterType="SgeEmployee">
+        DELETE FROM sge_employee 
+        WHERE id_employee = #{idEmployee};
+    </delete>
+    
+    <select id="get" parameterType="Integer" resultMap="result">
+        SELECT *, CONCAT(last_names, ', ', names) AS name_completed 
+        FROM sge_employee WHERE id_employee = #{idEmployee};
+    </select>
+    
+    <select id="getByDocumentNumber" parameterType="Map" resultType="SgeEmployee">
+        SELECT * FROM sge_employee 
+        WHERE id_enterprise = #{idEnterprise} AND document_number = #{documentNumber};
+    </select>
+    
+    <select id="getAllByIdEnterprise" parameterType="Integer" resultMap="result">
+        SELECT *, CONCAT(last_names, ', ', names) AS name_completed 
+        FROM sge_employee 
+        WHERE id_enterprise = #{idEnterprise} 
+        ORDER BY last_names;
+    </select>
+    
+    <select id="getAllActivesByIdEnterprise" parameterType="Integer" resultMap="result">
+        SELECT *, CONCAT(last_names, ', ', names) AS name_completed 
+        FROM sge_employee 
+        WHERE id_enterprise = #{idEnterprise} AND estado = 1 
+        ORDER BY last_names;
+    </select>
+    
+    <select id="getNextCode" parameterType="SgeEmployee" resultType="String">
+        SELECT IF(ISNULL(MAX(code)), 
+            CONCAT('EMP-', LPAD('1', 6, '0')), 
+            CONCAT('EMP-', LPAD(CAST(SUBSTR(MAX(code), LOCATE("-", MAX(code)) + 1) as DECIMAL) + 1, 6, '0')))
+        FROM sge_employee
+        WHERE SUBSTR(code, 1, LOCATE("-", code) - 1) = 'EMP'
+        AND LENGTH(SUBSTR(code, LOCATE("-", code) + 1)) = 6
+        AND id_enterprise = #{sgeEnterprise.idEnterprise};
+    </select>
+    
+</mapper>

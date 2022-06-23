@@ -1,0 +1,19 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sge.epp.dao.SgeTypeIdentityDao">
+
+    <select id="get" parameterType="Integer" resultType="SgeTypeIdentity">
+        SELECT * FROM sge_type_identity 
+        WHERE id_type_identity = #{idTypeIdentity};
+    </select>
+    
+    <select id="getAllActives" resultType="SgeTypeIdentity">
+        SELECT * FROM sge_type_identity 
+        WHERE state = 1;
+    </select>
+    
+    <select id="getAllActivesByType" parameterType="String" resultType="SgeTypeIdentity">
+        SELECT * FROM sge_type_identity 
+        WHERE type IN ('A', #{type}) AND state = 1;
+    </select>
+    
+</mapper>

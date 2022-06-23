@@ -1,0 +1,51 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sge.epp.dao.SgeClassificationDao">
+
+    <resultMap type="SgeClassification" id="result">
+        <association property="sgeEnterprise" column="id_enterprise" select="com.example.sge.epp.dao.SgeEnterpriseDao.get"/>
+    </resultMap>
+    
+    <insert id="insert" parameterType="SgeClassification">
+        INSERT INTO sge_classification (id_enterprise, code, name, state)
+        VALUES (#{sgeEnterprise.idEnterprise}, #{code}, #{name}, #{state});
+    </insert>
+    
+    <update id="update" parameterType="SgeClassification">
+        UPDATE sge_classification
+        SET name = #{name}, state = #{state}
+        WHERE id_classification = #{idClassification};
+    </update>
+    
+    <delete id="delete" parameterType="SgeClassification">
+        DELETE FROM sge_classification
+        WHERE id_classification = #{idClassification};
+    </delete>
+    
+    <select id="get" parameterType="Integer" resultMap="result">
+        SELECT * FROM sge_classification
+        WHERE id_classification = #{idClassification};
+    </select>
+    
+    <select id="getAllByIdEnterprise" parameterType="Integer" resultMap="result">
+        SELECT * FROM sge_classification
+        WHERE id_enterprise = #{idEnterprise}
+        ORDER BY code;
+    </select>
+    
+    <select id="getAllActivesByIdEnterprise" parameterType="Integer" resultMap="result">
+        SELECT * FROM sge_classification
+        WHERE id_enterprise = #{idEnterprise} AND state = 1
+        ORDER BY name;
+    </select>
+    
+    <select id="getNextCode" parameterType="SgeClassification" resultType="String">
+        SELECT IF(ISNULL(MAX(code)),
+            CONCAT('CLS-', LPAD('1', 6, '0')), 
+            CONCAT('CLS-', LPAD(CAST(SUBSTR(MAX(code), LOCATE("-", MAX(code)) + 1) as DECIMAL) + 1, 6, '0')))
+        FROM sge_classification
+        WHERE SUBSTR(code, 1, LOCATE("-", code) - 1) = 'CLS'
+        AND LENGTH(SUBSTR(code,LOCATE("-", code) + 1)) = 6
+        AND id_enterprise = #{sgeEnterprise.idEnterprise};
+    </select>
+    
+</mapper>
